@@ -17,7 +17,8 @@ import {
   ChevronRight,
   Building2,
   X,
-  Database
+  Database,
+  MessageSquare
 } from 'lucide-react';
 import { useState as useLocalState } from 'react';
 import BackupRestoreModal from './BackupRestoreModal';
@@ -34,7 +35,8 @@ const Sidebar = () => {
     items: false,
     customers: false,
     invoices: false,
-    users: false
+    users: false,
+    sms: false
   });
 
   const toggleMenu = (menu) => {
@@ -117,6 +119,16 @@ const Sidebar = () => {
       name: 'Payments',
       icon: CreditCard,
       path: '/payments'
+    },
+    {
+      name: 'SMS',
+      icon: MessageSquare,
+      key: 'sms',
+      isExpanded: expandedMenus.sms,
+      subItems: [
+        { name: 'Customer SMS', path: '/sms/customers' },
+        { name: 'Employee SMS', path: '/sms/employees' }
+      ]
     },
     {
       name: 'Account Management',

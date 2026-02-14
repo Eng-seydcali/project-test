@@ -28,6 +28,8 @@ import UserCenter from './pages/UserCenter';
 import CreateUser from './pages/CreateUser';
 import ProtectedRoute from './components/ProtectedRoute';
 import CreditOverview from './pages/CreditOverview';
+import CustomerSMS from './pages/CustomerSMS';
+import EmployeeSMS from './pages/EmployeeSMS';
 
 function App() {
   return (
@@ -69,6 +71,10 @@ function App() {
                 <Route path="/invoices" element={<InvoiceCenter />} />
                 <Route path="/invoices/create" element={<CreateInvoice />} />
                 
+                {/* SMS Routes */}
+                <Route path="/sms/customers" element={<CustomerSMS />} />
+                <Route path="/sms/employees" element={<EmployeeSMS />} />
+
                 {/* Other Routes */}
                 <Route path="/payments" element={<Payments />} />
                 <Route path="/account-management" element={<AccountManagement />} />

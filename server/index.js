@@ -116,12 +116,29 @@ const paymentSchema = new mongoose.Schema({
   customerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
   employeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee' },
   carId: { type: mongoose.Schema.Types.ObjectId, ref: 'Car' },
-  paymentNo: { type: String,  }, 
+  paymentNo: { type: String,  },
   amount: { type: Number, required: true },
   description: { type: String },
   paymentDate: { type: Date, required: true },
   accountMonth: { type: String },
   balanceAfter: { type: Number }, // Track balance after transaction
+  createdAt: { type: Date, default: Date.now }
+});
+
+const smsMessageSchema = new mongoose.Schema({
+  recipientType: { type: String, required: true, enum: ['customer', 'employee'] },
+  recipientId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  recipientName: { type: String, required: true },
+  phoneNumber: { type: String, required: true },
+  messageContent: { type: String, required: true },
+  status: { type: String, default: 'sent', enum: ['sent', 'failed'] },
+  sentDate: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const smsFooterTagSchema = new mongoose.Schema({
+  tagName: { type: String, required: true },
+  tagValue: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -133,6 +150,8 @@ const Item = mongoose.model('Item', itemSchema);
 const Customer = mongoose.model('Customer', customerSchema);
 const Invoice = mongoose.model('Invoice', invoiceSchema);
 const Payment = mongoose.model('Payment', paymentSchema);
+const SMSMessage = mongoose.model('SMSMessage', smsMessageSchema);
+const SMSFooterTag = mongoose.model('SMSFooterTag', smsFooterTagSchema);
 
 // Initialize only admin user
 async function initializeAdminUser() {
@@ -1721,6 +1740,87 @@ async function recalculateCustomerBalance(customerId) {
     throw error;
   }
 }
+
+// SMS Routes
+app.get('/api/sms/footer-tags', authenticateToken, async (req, res) => {
+  try {
+    const tags = await SMSFooterTag.find().sort({ createdAt: -1 });
+    res.json(tags);
+  } catch (error) {
+    console.error('❌ Error fetching footer tags:', error);
+    res.status(500).json({ error: 'Failed to fetch footer tags' });
+  }
+});
+
+app.post('/api/sms/footer-tags', authenticateToken, async (req, res) => {
+  try {
+    const { tag_name, tag_value } = req.body;
+    const newTag = await SMSFooterTag.create({
+      tagName: tag_name,
+      tagValue: tag_value
+    });
+    res.status(201).json(newTag);
+  } catch (error) {
+    console.error('❌ Error creating footer tag:', error);
+    res.status(500).json({ error: 'Failed to create footer tag' });
+  }
+});
+
+app.delete('/api/sms/footer-tags/:id', authenticateToken, async (req, res) => {
+  try {
+    await SMSFooterTag.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Tag deleted successfully' });
+  } catch (error) {
+    console.error('❌ Error deleting footer tag:', error);
+    res.status(500).json({ error: 'Failed to delete footer tag' });
+  }
+});
+
+app.get('/api/sms/messages', authenticateToken, async (req, res) => {
+  try {
+    const { type, recipient_id } = req.query;
+    let query = {};
+
+    if (type) {
+      query.recipientType = type;
+    }
+
+    if (recipient_id) {
+      query.recipientId = recipient_id;
+    }
+
+    const messages = await SMSMessage.find(query).sort({ sentDate: -1 });
+    res.json(messages);
+  } catch (error) {
+    console.error('❌ Error fetching messages:', error);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+app.post('/api/sms/send', authenticateToken, async (req, res) => {
+  try {
+    const { messages } = req.body;
+
+    const createdMessages = await SMSMessage.insertMany(
+      messages.map(msg => ({
+        recipientType: msg.recipient_type,
+        recipientId: msg.recipient_id,
+        recipientName: msg.recipient_name,
+        phoneNumber: msg.phone_number,
+        messageContent: msg.message_content,
+        status: msg.status
+      }))
+    );
+
+    res.status(201).json({
+      message: 'Messages sent successfully',
+      count: createdMessages.length
+    });
+  } catch (error) {
+    console.error('❌ Error sending messages:', error);
+    res.status(500).json({ error: 'Failed to send messages' });
+  }
+});
 
 // Graceful shutdown
 process.on('SIGINT', () => {
