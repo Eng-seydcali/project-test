@@ -952,7 +952,7 @@ const CreateInvoice = () => {
                   onClick={() => {
                     setShowAddItemModal(false);
                     setCurrentItemIndex(null);
-                    setNewItemData({ itemName: '', price: '' });
+                    setNewItemData({ itemName: ''});
                   }}
                   className="flex-1"
                   disabled={loading}
