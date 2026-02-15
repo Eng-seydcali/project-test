@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, Eye } from 'lucide-react';
-import Layout from '../components/Layout';
 import Button from '../components/Button';
 import Table from '../components/Table';
 import SendMessageModal from '../components/SendMessageModal';
@@ -197,88 +196,86 @@ const CustomerSMS = () => {
   ];
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <MessageSquare className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-800">Customer SMS</h1>
-          </div>
-          <Button
-            onClick={handleSendMessage}
-            variant="primary"
-            className="flex items-center gap-2"
-          >
-            <Send className="w-5 h-5" />
-            Send Message
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <MessageSquare className="w-8 h-8 text-blue-600" />
+          <h1 className="text-3xl font-bold text-gray-800">Customer SMS</h1>
         </div>
+        <Button
+          onClick={handleSendMessage}
+          variant="primary"
+          className="flex items-center gap-2"
+        >
+          <Send className="w-5 h-5" />
+          Send Message
+        </Button>
+      </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700 mr-2">
-                  Customer Type:
-                </label>
-                <select
-                  value={customerFilter}
-                  onChange={(e) => setCustomerFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="all">All Customers</option>
-                  <option value="credit">Credit Customers</option>
-                </select>
-              </div>
-            </div>
-
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
             <div>
               <label className="text-sm font-medium text-gray-700 mr-2">
-                Message Status:
+                Customer Type:
               </label>
               <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                value={customerFilter}
+                onChange={(e) => setCustomerFilter(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">All</option>
-                <option value="sent">Sent</option>
-                <option value="failed">Failed</option>
+                <option value="all">All Customers</option>
+                <option value="credit">Credit Customers</option>
               </select>
             </div>
           </div>
 
-          {selectedCustomers.length > 0 && (
-            <div className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>{selectedCustomers.length}</strong> customer(s) selected
-              </p>
-            </div>
-          )}
-
-          <Table
-            data={filteredCustomers}
-            columns={columns}
-            loading={loading}
-          />
+          <div>
+            <label className="text-sm font-medium text-gray-700 mr-2">
+              Message Status:
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">All</option>
+              <option value="sent">Sent</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
         </div>
 
-        <SendMessageModal
-          isOpen={showSendModal}
-          onClose={() => setShowSendModal(false)}
-          recipientType="customer"
-          selectedRecipients={selectedCustomers}
-          onSendComplete={handleSendComplete}
-        />
+        {selectedCustomers.length > 0 && (
+          <div className="mb-4 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>{selectedCustomers.length}</strong> customer(s) selected
+            </p>
+          </div>
+        )}
 
-        <MessageHistoryModal
-          isOpen={showHistoryModal}
-          onClose={() => setShowHistoryModal(false)}
-          messages={messageHistory}
-          recipientName={selectedCustomerHistory?.name}
+        <Table
+          data={filteredCustomers}
+          columns={columns}
+          loading={loading}
         />
       </div>
-    </Layout>
+
+      <SendMessageModal
+        isOpen={showSendModal}
+        onClose={() => setShowSendModal(false)}
+        recipientType="customer"
+        selectedRecipients={selectedCustomers}
+        onSendComplete={handleSendComplete}
+      />
+
+      <MessageHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        messages={messageHistory}
+        recipientName={selectedCustomerHistory?.name}
+      />
+    </div>
   );
 };
 
