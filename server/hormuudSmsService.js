@@ -7,6 +7,11 @@ class HormuudSmsService {
     this.password = process.env.HORMUUD_SMS_PASSWORD;
     this.accessToken = null;
     this.tokenExpiry = null;
+
+    console.log('🔧 Hormuud SMS Service initialized');
+    console.log('🔧 Username:', this.username);
+    console.log('🔧 Password exists:', !!this.password);
+    console.log('🔧 API URL:', this.baseUrl);
   }
 
   async getAccessToken() {
@@ -15,10 +20,16 @@ class HormuudSmsService {
     }
 
     try {
+      console.log('🔑 Attempting to get token with username:', this.username);
+      console.log('🔑 Password length:', this.password?.length, 'chars');
+      console.log('🔑 API URL:', this.baseUrl);
+
       const params = new URLSearchParams();
-      params.append('username', this.username);
-      params.append('password', this.password);
+      params.append('Username', this.username);
+      params.append('Password', this.password);
       params.append('grant_type', 'password');
+
+      console.log('📤 Request payload:', params.toString());
 
       const response = await axios.post(`${this.baseUrl}/token`, params, {
         headers: {
@@ -34,6 +45,7 @@ class HormuudSmsService {
       return this.accessToken;
     } catch (error) {
       console.error('❌ Error getting Hormuud SMS API token:', error.response?.data || error.message);
+      console.error('❌ Full error:', JSON.stringify(error.response?.data, null, 2));
       throw new Error('Failed to authenticate with Hormuud SMS API');
     }
   }
