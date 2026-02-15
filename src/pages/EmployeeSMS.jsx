@@ -38,16 +38,15 @@ const EmployeeSMS = () => {
 
       const employeesWithStats = employeesRes.data.map(employee => {
         const employeeMessages = messagesRes.data.filter(
-          msg => msg.recipient_id === employee.id
+          msg => msg.recipient_id === employee._id
         );
-
-        const latestBalance = employee.balances && employee.balances.length > 0
-          ? employee.balances[employee.balances.length - 1].amount
-          : 0;
 
         return {
           ...employee,
-          balance: latestBalance,
+          id: employee._id,
+          name: employee.employeeName,
+          phone: employee.phoneNumber,
+          balance: employee.balance || 0,
           sent_count: employeeMessages.filter(msg => msg.status === 'sent').length,
           failed_count: employeeMessages.filter(msg => msg.status === 'failed').length
         };

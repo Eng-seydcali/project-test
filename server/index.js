@@ -1745,7 +1745,13 @@ async function recalculateCustomerBalance(customerId) {
 app.get('/api/sms/footer-tags', authenticateToken, async (req, res) => {
   try {
     const tags = await SMSFooterTag.find().sort({ createdAt: -1 });
-    res.json(tags);
+    const formattedTags = tags.map(tag => ({
+      id: tag._id,
+      tag_name: tag.tagName,
+      tag_value: tag.tagValue,
+      created_at: tag.createdAt
+    }));
+    res.json(formattedTags);
   } catch (error) {
     console.error('❌ Error fetching footer tags:', error);
     res.status(500).json({ error: 'Failed to fetch footer tags' });
@@ -1790,7 +1796,18 @@ app.get('/api/sms/messages', authenticateToken, async (req, res) => {
     }
 
     const messages = await SMSMessage.find(query).sort({ sentDate: -1 });
-    res.json(messages);
+    const formattedMessages = messages.map(msg => ({
+      id: msg._id,
+      recipient_type: msg.recipientType,
+      recipient_id: msg.recipientId,
+      recipient_name: msg.recipientName,
+      phone_number: msg.phoneNumber,
+      message_content: msg.messageContent,
+      status: msg.status,
+      sent_date: msg.sentDate,
+      created_at: msg.createdAt
+    }));
+    res.json(formattedMessages);
   } catch (error) {
     console.error('❌ Error fetching messages:', error);
     res.status(500).json({ error: 'Failed to fetch messages' });

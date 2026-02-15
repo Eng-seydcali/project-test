@@ -39,11 +39,15 @@ const CustomerSMS = () => {
 
       const customersWithStats = customersRes.data.map(customer => {
         const customerMessages = messagesRes.data.filter(
-          msg => msg.recipient_id === customer.id
+          msg => msg.recipient_id === customer._id
         );
 
         return {
           ...customer,
+          id: customer._id,
+          name: customer.customerName,
+          phone: customer.phoneNumber,
+          balance: customer.balance || 0,
           sent_count: customerMessages.filter(msg => msg.status === 'sent').length,
           failed_count: customerMessages.filter(msg => msg.status === 'failed').length
         };

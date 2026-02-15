@@ -28,13 +28,8 @@ const SendMessageModal = ({ isOpen, onClose, recipientType, selectedRecipients, 
     }
   };
 
-  const loadCompanyInfo = async () => {
-    try {
-      const response = await api.get('/account-management');
-      setCompanyInfo(response.data);
-    } catch (error) {
-      console.error('Error loading company info:', error);
-    }
+  const loadCompanyInfo = () => {
+    setCompanyInfo({ company_name: 'Haype Construction' });
   };
 
   const handleAddTag = async () => {
