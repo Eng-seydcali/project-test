@@ -421,7 +421,23 @@ app.delete('/api/cars/:id', authenticateToken, async (req, res) => {
 app.get('/api/employees', authenticateToken, async (req, res) => {
   try {
     const employees = await Employee.find().sort({ createdAt: -1 });
-    res.json(employees);
+
+    // Get last payment for each employee
+    const employeesWithPayments = await Promise.all(
+      employees.map(async (employee) => {
+        const lastPayment = await Payment.findOne({
+          employeeId: employee._id
+        }).sort({ createdAt: -1 });
+
+        return {
+          ...employee.toObject(),
+          lastPaymentAmount: lastPayment ? lastPayment.amount : 0,
+          lastPaymentDate: lastPayment ? lastPayment.paymentDate : null
+        };
+      })
+    );
+
+    res.json(employeesWithPayments);
   } catch (error) {
     console.error('Get employees error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -1765,7 +1781,13 @@ app.post('/api/sms/footer-tags', authenticateToken, async (req, res) => {
       tagName: tag_name,
       tagValue: tag_value
     });
-    res.status(201).json(newTag);
+    const formattedTag = {
+      id: newTag._id,
+      tag_name: newTag.tagName,
+      tag_value: newTag.tagValue,
+      created_at: newTag.createdAt
+    };
+    res.status(201).json(formattedTag);
   } catch (error) {
     console.error('❌ Error creating footer tag:', error);
     res.status(500).json({ error: 'Failed to create footer tag' });

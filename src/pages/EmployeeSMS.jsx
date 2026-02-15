@@ -45,7 +45,7 @@ const EmployeeSMS = () => {
           id: employee._id,
           name: employee.employeeName,
           phone: employee.phoneNumber,
-          balance: employee.balance || 0,
+          balance: employee.lastPaymentAmount || 0,
           sent_count: employeeMessages.filter(msg => msg.status === 'sent').length,
           failed_count: employeeMessages.filter(msg => msg.status === 'failed').length
         };
@@ -153,9 +153,16 @@ const EmployeeSMS = () => {
       accessor: 'phone'
     },
     {
-      header: 'Latest Balance',
+      header: 'Last Payment Amount',
       accessor: 'balance',
-      cell: (employee) => `$${employee.balance?.toFixed(2) || '0.00'}`
+      cell: (employee) => {
+        const amount = employee.balance || 0;
+        return (
+          <span className={`font-semibold ${amount > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+            {amount > 0 ? '+' : ''}${amount.toFixed(2)}
+          </span>
+        );
+      }
     },
     {
       header: 'Sent Messages',

@@ -31,7 +31,9 @@ const Table = ({ data, columns, emptyMessage = 'No data available' }) => {
             <tr key={rowIndex} className="hover:bg-gray-50 transition-colors">
               {columns.map((column, colIndex) => (
                 <td key={colIndex} className="px-6 py-4 whitespace-nowrap text-sm">
-                  {column.render 
+                  {column.cell
+                    ? column.cell(row)
+                    : column.render
                     ? column.render(row[column.accessor], row)
                     : row[column.accessor]
                   }
