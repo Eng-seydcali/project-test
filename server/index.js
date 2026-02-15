@@ -1,9 +1,12 @@
-import express from 'express';
+import dotenv from 'dotenv';
+dotenv.config();
 
+import express from 'express';
 import cors from 'cors'
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import hormuudSmsService from './hormuudSmsService.js';
 
 const app = express();
 const PORT = process.env.PORT || 5009;
@@ -132,6 +135,8 @@ const smsMessageSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true },
   messageContent: { type: String, required: true },
   status: { type: String, default: 'sent', enum: ['sent', 'failed'] },
+  messageId: { type: String },
+  errorMessage: { type: String },
   sentDate: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now }
 });
@@ -1840,20 +1845,41 @@ app.post('/api/sms/send', authenticateToken, async (req, res) => {
   try {
     const { messages } = req.body;
 
-    const createdMessages = await SMSMessage.insertMany(
-      messages.map(msg => ({
+    const smsResults = [];
+
+    for (const msg of messages) {
+      const result = await hormuudSmsService.sendSms(
+        msg.phone_number,
+        msg.message_content,
+        'HaypeConst'
+      );
+
+      const messageRecord = await SMSMessage.create({
         recipientType: msg.recipient_type,
         recipientId: msg.recipient_id,
         recipientName: msg.recipient_name,
         phoneNumber: msg.phone_number,
         messageContent: msg.message_content,
-        status: msg.status
-      }))
-    );
+        status: result.status,
+        messageId: result.messageId || null,
+        errorMessage: result.error || null
+      });
+
+      smsResults.push({
+        ...messageRecord.toObject(),
+        apiResponse: result
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    const successCount = smsResults.filter(r => r.status === 'sent').length;
+    const failedCount = smsResults.filter(r => r.status === 'failed').length;
 
     res.status(201).json({
-      message: 'Messages sent successfully',
-      count: createdMessages.length
+      message: `${successCount} message(s) sent, ${failedCount} failed`,
+      count: smsResults.length,
+      results: smsResults
     });
   } catch (error) {
     console.error('❌ Error sending messages:', error);
