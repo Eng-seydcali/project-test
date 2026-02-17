@@ -1249,15 +1249,21 @@ app.get('/api/payments', authenticateToken, async (req, res) => {
 
 
 // UPDATE PAYMENT - NEW ROUTE
-app.put('/api/payments/receive/:id', async (req, res) => {
+app.put('/api/payments/receive/:id', authenticateToken, async (req, res) => {
    try {
     const { id } = req.params;
     const { paymentNo, amount, description, paymentDate, customerId } = req.body;
 
+    console.log('📝 Updating receive payment:', id);
+    console.log('📦 Payload:', { paymentNo, amount, description, paymentDate, customerId });
+
     const originalPayment = await Payment.findById(id);
     if (!originalPayment) {
+      console.error('❌ Payment not found:', id);
       return res.status(404).json({ error: 'Receive payment not found' });
     }
+
+    console.log('📋 Original payment:', originalPayment);
 
     // Update
     const updatedPayment = await Payment.findByIdAndUpdate(
@@ -1278,29 +1284,38 @@ app.put('/api/payments/receive/:id', async (req, res) => {
       console.log(`🔁 Customer balance recalculated for ${cId}`);
     }
 
-    res.json({ success: true, payment: updatedPayment });
+    console.log('✅ Receive payment updated successfully');
+    res.json({ success: true, payment: updatedPayment, message: 'Payment updated successfully' });
   } catch (error) {
     console.error('❌ Error updating receive payment:', error);
-    res.status(500).json({ error: 'Failed to update receive payment' });
+    res.status(500).json({ success: false, error: 'Failed to update receive payment' });
   }
 });
 
 // UPDATE OUT PAYMENT
-app.put('/api/payments/payment-out/:id', async (req, res) => {
+app.put('/api/payments/payment-out/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { paymentNo, amount, description, paymentDate, carId } = req.body;
 
+    console.log('📝 Updating out payment:', id);
+    console.log('📦 Payload:', { paymentNo, amount, description, paymentDate, carId });
+
     const originalPayment = await Payment.findById(id);
     if (!originalPayment) {
+      console.error('❌ Payment not found:', id);
       return res.status(404).json({ error: 'Out payment not found' });
     }
+
+    console.log('📋 Original payment:', originalPayment);
 
     const updatedPayment = await Payment.findByIdAndUpdate(
       id,
       { paymentNo, amount, description, paymentDate, carId, type: 'payment_out' },
       { new: true }
     ).populate('carId', 'carName numberPlate');
+
+    console.log('✅ Payment updated:', updatedPayment);
 
     // ✅ Update car balance
     const amountDifference = amount - originalPayment.amount;
@@ -1315,10 +1330,11 @@ app.put('/api/payments/payment-out/:id', async (req, res) => {
       }
     }
 
-    res.json({ success: true, payment: updatedPayment });
+    console.log('✅ Out payment updated successfully');
+    res.json({ success: true, payment: updatedPayment, message: 'Payment updated successfully' });
   } catch (error) {
     console.error('❌ Error updating out payment:', error);
-    res.status(500).json({ error: 'Failed to update out payment' });
+    res.status(500).json({ success: false, error: 'Failed to update out payment' });
   }
 });
        

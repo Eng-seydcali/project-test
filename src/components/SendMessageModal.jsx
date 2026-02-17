@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import Button from './Button';
 import api from '../services/api';
+import { useToast } from '../contexts/ToastContext';
 
 const SendMessageModal = ({ isOpen, onClose, recipientType, selectedRecipients, onSendComplete }) => {
   const [message, setMessage] = useState('');
@@ -11,6 +12,7 @@ const SendMessageModal = ({ isOpen, onClose, recipientType, selectedRecipients, 
   const [showAddTag, setShowAddTag] = useState(false);
   const [companyInfo, setCompanyInfo] = useState(null);
   const [sending, setSending] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -75,12 +77,12 @@ const SendMessageModal = ({ isOpen, onClose, recipientType, selectedRecipients, 
 
   const handleSendMessages = async () => {
     if (!message.trim()) {
-      alert('Please enter a message');
+      showToast('Please enter a message', 'error');
       return;
     }
 
     if (selectedRecipients.length === 0) {
-      alert('No recipients selected');
+      showToast('No recipients selected', 'error');
       return;
     }
 
@@ -116,13 +118,13 @@ const SendMessageModal = ({ isOpen, onClose, recipientType, selectedRecipients, 
         const { successCount = 0, failedCount = 0, message: responseMessage } = response.data;
 
         if (successCount > 0 && failedCount === 0) {
-          alert(`✅ Success! ${successCount} message(s) sent successfully!`);
+          showToast(`${successCount} message(s) sent successfully!`, 'success');
         } else if (successCount > 0 && failedCount > 0) {
-          alert(`⚠️ Partial Success: ${successCount} sent, ${failedCount} failed`);
+          showToast(`${successCount} sent, ${failedCount} failed`, 'warning');
         } else if (failedCount > 0 && successCount === 0) {
-          alert(`❌ Failed: All ${failedCount} message(s) failed to send`);
+          showToast(`All ${failedCount} message(s) failed to send`, 'error');
         } else {
-          alert(responseMessage || 'Messages processed');
+          showToast(responseMessage || 'Messages processed', 'info');
         }
 
         setMessage('');
@@ -134,7 +136,7 @@ const SendMessageModal = ({ isOpen, onClose, recipientType, selectedRecipients, 
     } catch (error) {
       console.error('❌ Error sending messages:', error);
       const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
-      alert(`Error sending messages: ${errorMessage}`);
+      showToast(`Error sending messages: ${errorMessage}`, 'error');
     } finally {
       setSending(false);
     }

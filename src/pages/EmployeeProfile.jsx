@@ -201,37 +201,40 @@ const EmployeeProfile = () => {
     e.preventDefault();
 
     if (!balanceFormData.amount || !balanceFormData.date || !balanceFormData.description) {
-      showError('Validation Error', 'Please fill in all fields');
+      showError('Please fill in all fields');
       return;
     }
 
     setBalanceLoading(true);
 
     try {
-      // Call backend API to add balance and create payment record
       const response = await api.post(`/employees/${id}/add-balance`, {
-        amount: balanceFormData.amount,
+        amount: parseFloat(balanceFormData.amount),
         date: balanceFormData.date,
         description: balanceFormData.description
       });
 
-      showSuccess('Balance Added', `$${balanceFormData.amount} has been added to ${employee.employeeName}'s balance`);
+      console.log('✅ Add balance response:', response.data);
 
-      // Reset form and close modal
-      setBalanceFormData({
-        amount: '',
-        date: new Date().toISOString().split('T')[0],
-        description: ''
-      });
-      setShowAddBalanceModal(false);
+      if (response.data.success) {
+        showSuccess(`$${balanceFormData.amount} added successfully`);
 
-      // Reload data
-      loadEmployeeData();
-      loadPaymentHistory();
+        setBalanceFormData({
+          amount: '',
+          date: new Date().toISOString().split('T')[0],
+          description: ''
+        });
+        setShowAddBalanceModal(false);
+
+        await loadEmployeeData();
+        await loadPaymentHistory();
+      } else {
+        throw new Error(response.data.message || 'Failed to add balance');
+      }
 
     } catch (error) {
       console.error('❌ Error adding balance:', error);
-      showError('Add Balance Failed', error.response?.data?.message || 'Failed to add balance. Please try again.');
+      showError(error.response?.data?.error || error.message || 'Failed to add balance');
     } finally {
       setBalanceLoading(false);
     }
@@ -241,37 +244,40 @@ const EmployeeProfile = () => {
     e.preventDefault();
 
     if (!balanceFormData.amount || !balanceFormData.date || !balanceFormData.description) {
-      showError('Validation Error', 'Please fill in all fields');
+      showError('Please fill in all fields');
       return;
     }
 
     setBalanceLoading(true);
 
     try {
-      // Call backend API to deduct balance and create payment record
       const response = await api.post(`/employees/${id}/deduct-balance`, {
-        amount: balanceFormData.amount,
+        amount: parseFloat(balanceFormData.amount),
         date: balanceFormData.date,
         description: balanceFormData.description
       });
 
-      showSuccess('Balance Deducted', `$${balanceFormData.amount} has been deducted from ${employee.employeeName}'s balance`);
+      console.log('✅ Deduct balance response:', response.data);
 
-      // Reset form and close modal
-      setBalanceFormData({
-        amount: '',
-        date: new Date().toISOString().split('T')[0],
-        description: ''
-      });
-      setShowDeductBalanceModal(false);
+      if (response.data.success) {
+        showSuccess(`$${balanceFormData.amount} deducted successfully`);
 
-      // Reload data
-      loadEmployeeData();
-      loadPaymentHistory();
+        setBalanceFormData({
+          amount: '',
+          date: new Date().toISOString().split('T')[0],
+          description: ''
+        });
+        setShowDeductBalanceModal(false);
+
+        await loadEmployeeData();
+        await loadPaymentHistory();
+      } else {
+        throw new Error(response.data.message || 'Failed to deduct balance');
+      }
 
     } catch (error) {
       console.error('❌ Error deducting balance:', error);
-      showError('Deduct Balance Failed', error.response?.data?.message || 'Failed to deduct balance. Please try again.');
+      showError(error.response?.data?.error || error.message || 'Failed to deduct balance');
     } finally {
       setBalanceLoading(false);
     }

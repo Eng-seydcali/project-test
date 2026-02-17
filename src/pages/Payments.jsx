@@ -334,34 +334,35 @@ const handleEditPaymentSubmit = async (e) => {
     });
 
     // ✅ Use separate API endpoints based on type
+    let response;
     if (editPaymentData.type === 'receive') {
-      await paymentsAPI.updateReceivePayment(editPaymentData._id, {
+      response = await paymentsAPI.updateReceivePayment(editPaymentData._id, {
         ...payload,
         customerId,
       });
     } else if (editPaymentData.type === 'out') {
-      await paymentsAPI.updatePaymentOut(editPaymentData._id, {
+      response = await paymentsAPI.updatePaymentOut(editPaymentData._id, {
         ...payload,
         carId,
       });
     }
 
-    // ✅ Success message
-    showSuccess(
-      'Payment Updated',
-      `Payment ${editPaymentData.paymentNo} updated successfully`
-    );
+    console.log('✅ Payment update response:', response?.data);
 
-    // Close modal and refresh data
-    setShowEditPaymentModal(false);
-    setEditPaymentData(null);
-    loadAllData();
+    // ✅ Success message
+    if (response?.data?.success) {
+      showSuccess(`Payment ${editPaymentData.paymentNo} updated successfully`);
+
+      // Close modal and refresh data
+      setShowEditPaymentModal(false);
+      setEditPaymentData(null);
+      await loadAllData();
+    } else {
+      throw new Error(response?.data?.error || 'Failed to update payment');
+    }
   } catch (error) {
     console.error('❌ Error updating payment:', error);
-    showError(
-      'Update Failed',
-      error.response?.data?.error || 'Error updating payment'
-    );
+    showError(error.response?.data?.error || error.message || 'Error updating payment');
   } finally {
     setLoading(false);
   }
