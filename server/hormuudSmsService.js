@@ -30,6 +30,11 @@ class HormuudSmsService {
       params.append('grant_type', 'password');
 
       console.log('📤 Request payload:', params.toString());
+      console.log('📤 Full request details:');
+      console.log('   - URL:', `${this.baseUrl}/token`);
+      console.log('   - Username param:', this.username);
+      console.log('   - Password param:', this.password);
+      console.log('   - Grant type:', 'password');
 
       const response = await axios.post(`${this.baseUrl}/token`, params, {
         headers: {
@@ -50,7 +55,71 @@ class HormuudSmsService {
     }
   }
 
+  async sendSmsWithBasicAuth(mobile, message, senderid = 'HaypeConst') {
+    try {
+      console.log('📤 Sending SMS with Basic Auth to:', mobile);
+
+      const payload = {
+        mobile: mobile,
+        message: message,
+        senderid: senderid,
+        refid: `ref_${Date.now()}`,
+        validity: 0
+      };
+
+      const basicAuth = Buffer.from(`${this.username}:${this.password}`).toString('base64');
+
+      console.log('🔐 Using Basic Auth');
+
+      const response = await axios.post(
+        `${this.baseUrl}/api/sms/Send`,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${basicAuth}`
+          }
+        }
+      );
+
+      if (response.data.ResponseCode === '200') {
+        console.log('✅ SMS sent successfully to:', mobile);
+        return {
+          success: true,
+          messageId: response.data.Data?.MessageID,
+          status: 'sent',
+          details: response.data
+        };
+      } else {
+        console.error('❌ SMS send failed:', response.data.ResponseMessage);
+        return {
+          success: false,
+          status: 'failed',
+          error: response.data.ResponseMessage,
+          details: response.data
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error sending SMS with Basic Auth:', error.response?.data || error.message);
+      return {
+        success: false,
+        status: 'failed',
+        error: error.response?.data?.ResponseMessage || error.message
+      };
+    }
+  }
+
   async sendSms(mobile, message, senderid = 'HaypeConst') {
+    console.log('🚀 Attempting to send SMS...');
+
+    let result = await this.sendSmsWithBasicAuth(mobile, message, senderid);
+
+    if (result.success) {
+      return result;
+    }
+
+    console.log('⚠️ Basic Auth failed, trying Bearer Token...');
+
     try {
       const token = await this.getAccessToken();
 
