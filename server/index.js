@@ -1846,13 +1846,27 @@ app.post('/api/sms/send', authenticateToken, async (req, res) => {
     const { messages } = req.body;
 
     const smsResults = [];
+    const senderid = process.env.HORMUUD_SENDERID || 'BanadirGym';
+
+    console.log('📤 Starting to send', messages.length, 'SMS message(s)');
+    console.log('🏷️  Using Sender ID:', senderid);
 
     for (const msg of messages) {
+      console.log(`\n📱 Sending to: ${msg.phone_number} (${msg.recipient_name})`);
+
       const result = await hormuudSmsService.sendSms(
         msg.phone_number,
         msg.message_content,
-        'HaypeConst'
+        senderid
       );
+
+      console.log(`📊 Result for ${msg.phone_number}:`, {
+        success: result.success,
+        status: result.status,
+        messageId: result.messageId
+      });
+
+      const finalStatus = result.status || (result.success ? 'sent' : 'failed');
 
       const messageRecord = await SMSMessage.create({
         recipientType: msg.recipient_type,
@@ -1860,7 +1874,7 @@ app.post('/api/sms/send', authenticateToken, async (req, res) => {
         recipientName: msg.recipient_name,
         phoneNumber: msg.phone_number,
         messageContent: msg.message_content,
-        status: result.status,
+        status: finalStatus,
         messageId: result.messageId || null,
         errorMessage: result.error || null
       });
@@ -1876,14 +1890,23 @@ app.post('/api/sms/send', authenticateToken, async (req, res) => {
     const successCount = smsResults.filter(r => r.status === 'sent').length;
     const failedCount = smsResults.filter(r => r.status === 'failed').length;
 
+    console.log(`\n✅ SMS Sending Complete: ${successCount} sent, ${failedCount} failed\n`);
+
     res.status(201).json({
+      success: successCount > 0,
       message: `${successCount} message(s) sent, ${failedCount} failed`,
       count: smsResults.length,
+      successCount: successCount,
+      failedCount: failedCount,
       results: smsResults
     });
   } catch (error) {
     console.error('❌ Error sending messages:', error);
-    res.status(500).json({ error: 'Failed to send messages' });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send messages',
+      details: error.message
+    });
   }
 });
 

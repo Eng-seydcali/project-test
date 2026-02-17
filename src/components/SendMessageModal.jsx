@@ -104,19 +104,37 @@ const SendMessageModal = ({ isOpen, onClose, recipientType, selectedRecipients, 
           recipient_id: recipient.id,
           recipient_name: recipient.name,
           phone_number: recipient.phone,
-          message_content: personalizedMessage,
-          status: Math.random() > 0.1 ? 'sent' : 'failed'
+          message_content: personalizedMessage
         };
       });
 
-      await api.post('/sms/send', { messages });
+      const response = await api.post('/sms/send', { messages });
 
-      setMessage('');
-      onSendComplete();
-      onClose();
+      console.log('📤 SMS Response:', response.data);
+
+      if (response.data) {
+        const { successCount = 0, failedCount = 0, message: responseMessage } = response.data;
+
+        if (successCount > 0 && failedCount === 0) {
+          alert(`✅ Success! ${successCount} message(s) sent successfully!`);
+        } else if (successCount > 0 && failedCount > 0) {
+          alert(`⚠️ Partial Success: ${successCount} sent, ${failedCount} failed`);
+        } else if (failedCount > 0 && successCount === 0) {
+          alert(`❌ Failed: All ${failedCount} message(s) failed to send`);
+        } else {
+          alert(responseMessage || 'Messages processed');
+        }
+
+        setMessage('');
+        onSendComplete();
+        onClose();
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
-      console.error('Error sending messages:', error);
-      alert('Error sending messages. Please try again.');
+      console.error('❌ Error sending messages:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
+      alert(`Error sending messages: ${errorMessage}`);
     } finally {
       setSending(false);
     }
